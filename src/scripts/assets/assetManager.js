@@ -45,7 +45,6 @@ export class AssetManager {
    */
   getModel(name, simObject, transparent = false) {
     const mesh = this.models[name].clone();
-
     // Clone materials so each object has a unique material
     // This is so we can set the modify the texture of each
     // mesh independently (e.g. highlight on mouse over,
@@ -78,6 +77,7 @@ export class AssetManager {
    * @param {string} url The URL of the model to load
    */
   #loadModel(name, {filename, scale = 1, rotation = 0, receiveShadow = true, castShadow = true}) {
+    console.log(`Loading: ${baseUrl}models/${filename}`)
     this.modelLoader.load(`${baseUrl}models/${filename}`,
       (glb) => {
         let mesh = glb.scene;
@@ -88,7 +88,7 @@ export class AssetManager {
           if (obj.material) {
             obj.material = new THREE.MeshLambertMaterial({
               map: this.textures.base,
-              specularMap: this.textures.specular
+              specularMap: this.textures.specular,
             })
             obj.receiveShadow = receiveShadow;
             obj.castShadow = castShadow;

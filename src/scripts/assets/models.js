@@ -120,6 +120,10 @@ export default {
     "type": "power",
     "filename": "power_line_pole_modified.glb"
   },
+  "water-plant": {
+    "type": "power",
+    "filename": "industry-factory-old.glb"
+  },
   "road-straight": {
     "type": "road",
     "filename": "tile-road-straight.glb",

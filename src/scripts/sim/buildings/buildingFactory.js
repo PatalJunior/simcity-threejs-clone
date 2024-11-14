@@ -6,6 +6,7 @@ import { Road } from './transportation/road.js';
 import { Building } from './building.js';
 import { PowerPlant } from './power/powerPlant.js';
 import { PowerLine } from './power/powerLine.js';
+import { WaterPlant } from './water/waterPlant.js';
 
 /**
  * Creates a new building object
@@ -28,6 +29,8 @@ export function createBuilding(x, y, type) {
       return new PowerPlant();
     case BuildingType.powerLine:
       return new PowerLine();
+    case BuildingType.waterPlant:
+      return new WaterPlant();
     default:
       console.error(`${type} is not a recognized building type.`);
   }
