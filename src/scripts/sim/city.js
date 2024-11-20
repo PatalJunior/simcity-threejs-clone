@@ -3,76 +3,84 @@ import { BuildingType } from './buildings/buildingType.js';
 import { createBuilding } from './buildings/buildingFactory.js';
 import { Tile } from './tile.js';
 import { VehicleGraph } from './vehicles/vehicleGraph.js';
-import { PowerService } from './services/power.js';
 import { SimService } from './services/simService.js';
 
 export class City extends THREE.Group {
   /**
-   * Separate group for organizing debug meshes so they aren't included
-   * in raycasting checks
+   * Grupo separado para organizar meshes de depuração
+   * para que não sejam incluídas em verificações de raycasting
    * @type {THREE.Group}
    */
   debugMeshes = new THREE.Group();
+  
   /**
-   * Root node for all scene objects 
+   * Nó raiz para todos os objetos da cena
    * @type {THREE.Group}
    */
   root = new THREE.Group();
+  
   /**
-   * List of services for the city
-   * @type {SimService}
+   * Lista de serviços disponíveis na cidade
+   * @type {SimService[]}
    */
   services = [];
+  
   /**
-   * The size of the city in tiles
+   * Tamanho da cidade em tiles
    * @type {number}
    */
-  size = 16;
+  size = 8;
+  
   /**
-   * The current simulation time
+   * Tempo atual da simulação
    */
   simTime = 0;
+  
   /**
-   * 2D array of tiles that make up the city
+   * Matriz 2D representando os tiles da cidade
    * @type {Tile[][]}
    */
   tiles = [];
+  
   /**
-   * 
-   * @param {VehicleGraph} size 
+   * Grafo de veículos para gerenciar conexões e rotas
+   * @type {VehicleGraph}
    */
   vehicleGraph;
 
-  constructor(size, name = 'My City') {
-    super();
+  // Construtor da cidade
+  constructor(size, name = 'Patal & oSlaYn CITY') {
+    super(); // Inicializa a classe pai (THREE.Group)
 
     this.name = name;
     this.size = size;
     
-    this.add(this.debugMeshes);
-    this.add(this.root);
+    this.add(this.debugMeshes); // Adiciona meshes de depuração
+    this.add(this.root);        // Adiciona o nó raiz
 
+    // Cria a matriz de tiles (blocos da cidade)
     this.tiles = [];
     for (let x = 0; x < this.size; x++) {
+      console.log(x)
       const column = [];
       for (let y = 0; y < this.size; y++) {
-        const tile = new Tile(x, y);
-        tile.refreshView(this);
-        this.root.add(tile);
-        column.push(tile);
+        const tile = new Tile(x, y); // Cria cada tile
+        tile.refreshView(this);     // Atualiza a visualização do tile
+        this.root.add(tile);        // Adiciona ao nó raiz
+        column.push(tile);          // Adiciona o tile à coluna
       }
-      this.tiles.push(column);
+      this.tiles.push(column);      // Adiciona a coluna à matriz
     }
 
-    this.services = [];
-    this.services.push(new PowerService());
-    
+    this.services = []; // Inicializa a lista de serviços
+
+    // Inicializa o grafo de veículos
     this.vehicleGraph = new VehicleGraph(this.size);
-    this.debugMeshes.add(this.vehicleGraph);
+    this.debugMeshes.add(this.vehicleGraph); // Adiciona ao grupo de depuração
   }
 
   /**
-   * The total population of the city
+   * Retorna a população total da cidade
    * @type {number}
    */
   get population() {
@@ -80,22 +88,25 @@ export class City extends THREE.Group {
     for (let x = 0; x < this.size; x++) {
       for (let y = 0; y < this.size; y++) {
         const tile = this.getTile(x, y);
-        population += tile.building?.residents?.count ?? 0;
+        population += tile.building?.residents?.count ?? 0; // Soma a população de cada tile
       }
     }
     return population;
   }
 
-  /** Returns the title at the coordinates. If the coordinates
-   * are out of bounds, then `null` is returned.
-   * @param {number} x The x-coordinate of the tile
-   * @param {number} y The y-coordinate of the tile
+  /**
+   * Retorna o tile nas coordenadas especificadas.
+   * Se estiver fora dos limites, retorna `null`.
+   * @param {number} x Coordenada x do tile
+   * @param {number} y Coordenada y do tile
    * @returns {Tile | null}
    */
   getTile(x, y) {
-    if (x === undefined || y === undefined ||
-      x < 0 || y < 0 ||
-      x >= this.size || y >= this.size) {
+    if (
+      x === undefined || y === undefined || 
+      x < 0 || y < 0 || 
+      x >= this.size || y >= this.size
+    ) {
       return null;
     } else {
       return this.tiles[x][y];
@@ -103,47 +114,46 @@ export class City extends THREE.Group {
   }
 
   /**
-   * Step the simulation forward by one step
-   * @type {number} steps Number of steps to simulate forward in time
+   * Avança a simulação em um ou mais passos
+   * @type {number} steps Número de passos a simular
    */
   simulate(steps = 1) {
     let count = 0;
     while (count++ < steps) {
-      // Update services
+      // Atualiza os serviços
       this.services.forEach((service) => service.simulate(this));
 
-      // Update each building
+      // Atualiza cada tile
       for (let x = 0; x < this.size; x++) {
         for (let y = 0; y < this.size; y++) {
           this.getTile(x, y).simulate(this);
         }
       }
     }
-    this.simTime++;
+    this.simTime++; // Incrementa o tempo da simulação
   }
 
   /**
-   * Places a building at the specified coordinates if the
-   * tile does not already have a building on it
-   * @param {number} x 
-   * @param {number} y 
-   * @param {string} buildingType 
+   * Coloca um edifício em um tile especificado
+   * @param {number} x Coordenada x
+   * @param {number} y Coordenada y
+   * @param {string} buildingType Tipo do edifício
    */
   placeBuilding(x, y, buildingType) {
     const tile = this.getTile(x, y);
 
-    // If the tile doesnt' already have a building, place one there
+    // Verifica se o tile já possui um edifício
     if (tile && !tile.building) {
       tile.setBuilding(createBuilding(x, y, buildingType));
       tile.refreshView(this);
-      
-      // Update buildings on adjacent tile in case they need to
-      // change their mesh (e.g. roads)
+
+      // Atualiza a visualização dos tiles vizinhos (ex: para estradas)
       this.getTile(x - 1, y)?.refreshView(this);
       this.getTile(x + 1, y)?.refreshView(this);
       this.getTile(x, y - 1)?.refreshView(this);
       this.getTile(x, y + 1)?.refreshView(this);
 
+      // Atualiza o grafo de veículos se o edifício for uma estrada
       if (tile.building.type === BuildingType.road) {
         this.vehicleGraph.updateTile(x, y, tile.building);
       }
@@ -151,23 +161,24 @@ export class City extends THREE.Group {
   }
 
   /**
-   * Bulldozes the building at the specified coordinates
-   * @param {number} x 
-   * @param {number} y
+   * Demole um edifício em um tile especificado
+   * @param {number} x Coordenada x
+   * @param {number} y Coordenada y
    */
   bulldoze(x, y) {
     const tile = this.getTile(x, y);
 
     if (tile.building) {
+      // Remove do grafo de veículos se for uma estrada
       if (tile.building.type === BuildingType.road) {
         this.vehicleGraph.updateTile(x, y, null);
       }
 
-      tile.building.dispose();
-      tile.setBuilding(null);
+      tile.building.dispose(); // Libera recursos do edifício
+      tile.setBuilding(null); // Remove o edifício
       tile.refreshView(this);
 
-      // Update neighboring tiles in case they need to change their mesh (e.g. roads)
+      // Atualiza os tiles vizinhos
       this.getTile(x - 1, y)?.refreshView(this);
       this.getTile(x + 1, y)?.refreshView(this);
       this.getTile(x, y - 1)?.refreshView(this);
@@ -175,57 +186,58 @@ export class City extends THREE.Group {
     }
   }
 
+  /**
+   * Desenha ou atualiza a representação visual da cidade
+   */
   draw() {
-    this.vehicleGraph.updateVehicles();
+    // Método para ser implementado no futuro
   }
 
   /**
-   * Finds the first tile where the criteria are true
-   * @param {{x: number, y: number}} start The starting coordinates of the search
-   * @param {(Tile) => (boolean)} filter This function is called on each
-   * tile in the search field until `filter` returns true, or there are
-   * no more tiles left to search.
-   * @param {number} maxDistance The maximum distance to search from the starting tile
-   * @returns {Tile | null} The first tile matching `criteria`, otherwiser `null`
+   * Encontra o primeiro tile que atende aos critérios fornecidos
+   * @param {{x: number, y: number}} start Coordenadas iniciais
+   * @param {(Tile) => (boolean)} filter Função para filtrar tiles
+   * @param {number} maxDistance Distância máxima para busca
+   * @returns {Tile | null} O primeiro tile que atende aos critérios ou `null`
    */
   findTile(start, filter, maxDistance) {
     const startTile = this.getTile(start.x, start.y);
     const visited = new Set();
     const tilesToSearch = [];
 
-    // Initialze our search with the starting tile
+    // Inicializa a busca com o tile de início
     tilesToSearch.push(startTile);
 
     while (tilesToSearch.length > 0) {
       const tile = tilesToSearch.shift();
 
-      // Has this tile been visited? If so, ignore it and move on
+      // Ignora tiles já visitados
       if (visited.has(tile.id)) {
         continue;
       } else {
         visited.add(tile.id);
       }
 
-      // Check if tile is outside the search bounds
+      // Verifica se o tile está fora do limite de distância
       const distance = startTile.distanceTo(tile);
       if (distance > maxDistance) continue;
 
-      // Add this tiles neighbor's to the search list
+      // Adiciona vizinhos à lista de busca
       tilesToSearch.push(...this.getTileNeighbors(tile.x, tile.y));
 
-      // If this tile passes the criteria 
+      // Retorna o tile se passar nos critérios
       if (filter(tile)) {
         return tile;
       }
     }
 
-    return null;
+    return null; // Nenhum tile encontrado
   }
 
   /**
-   * Finds and returns the neighbors of this tile
-   * @param {number} x The x-coordinate of the tile
-   * @param {number} y The y-coordinate of the tile
+   * Retorna os vizinhos de um tile
+   * @param {number} x Coordenada x
+   * @param {number} y Coordenada y
    */
   getTileNeighbors(x, y) {
     const neighbors = [];

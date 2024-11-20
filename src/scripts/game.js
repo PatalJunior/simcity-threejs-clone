@@ -6,7 +6,7 @@ import { City } from './sim/city.js';
 import { SimObject } from './sim/simObject.js';
 
 /** 
- * Manager for the Three.js scene. Handles rendering of a `City` object
+ * Gerenciador da cena do Three.js. Lida com a renderização de um objeto `City`.
  */
 export class Game {
   /**
@@ -14,17 +14,17 @@ export class Game {
    */
   city;
   /**
-   * Object that currently hs focus
+   * Objeto que atualmente tem o foco
    * @type {SimObject | null}
    */
   focusedObject = null;
   /**
-   * Class for managing user input
+   * Classe para gerenciar a entrada do usuário
    * @type {InputManager}
    */
   inputManager;
   /**
-   * Object that is currently selected
+   * Objeto que está atualmente selecionado
    * @type {SimObject | null}
    */
   selectedObject = null;
@@ -39,27 +39,27 @@ export class Game {
     this.scene.background = new THREE.Color(0x87ceeb);
 
     this.inputManager = new InputManager(window.ui.gameWindow);
-    this.cameraManager = new CameraManager(window.ui.gameWindow);
+    this.cameraManager = new CameraManager();
 
-    // Configure the renderer
+    // Configurar o renderizador
     this.renderer.setSize(window.ui.gameWindow.clientWidth, window.ui.gameWindow.clientHeight);
     this.renderer.setClearColor(0x000000, 0);
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
 
-    // Add the renderer to the DOM
+    // Adicionar o renderizador ao DOM
     window.ui.gameWindow.appendChild(this.renderer.domElement);
 
-    // Variables for object selection
+    // Variáveis para seleção de objetos
     this.raycaster = new THREE.Raycaster();
 
     /**
-     * Global instance of the asset manager
+     * Instância global do gerenciador de ativos
      */
     window.assetManager = new AssetManager(() => {
       window.ui.hideLoadingText();
 
-      this.city = new City(16);
+      this.city = new City(8);
       this.initialize(this.city);
       this.start();
 
@@ -70,7 +70,7 @@ export class Game {
   }
 
   /**
-   * Initalizes the scene, clearing all existing assets
+   * Inicializa a cena, limpando todos os ativos existentes
    */
   initialize(city) {
     this.scene.clear();
@@ -80,7 +80,7 @@ export class Game {
   }
 
   #setupGrid(city) {
-    // Add the grid
+    // Adiciona a grade
     const gridMaterial = new THREE.MeshBasicMaterial({ 
       color: 0x000000,
       map: window.assetManager.textures['grid'],
@@ -100,10 +100,10 @@ export class Game {
   }
 
   /**
-   * Setup the lights for the scene
+   * Configura as luzes da cena
    */
   #setupLights() {
-    const sun = new THREE.DirectionalLight(0xffffff, 2)
+    const sun = new THREE.DirectionalLight(0xffffff, 2);
     sun.position.set(-10, 20, 0);
     sun.castShadow = true;
     sun.shadow.camera.left = -20;
@@ -120,21 +120,21 @@ export class Game {
   }
   
   /**
-   * Starts the renderer
+   * Inicia o renderizador
    */
   start() {
     this.renderer.setAnimationLoop(this.draw.bind(this));
   }
 
   /**
-   * Stops the renderer
+   * Para o renderizador
    */
   stop() {
     this.renderer.setAnimationLoop(null);
   }
 
   /**
-   * Render the contents of the scene
+   * Renderiza o conteúdo da cena
    */
   draw() {
     this.city.draw();
@@ -148,12 +148,12 @@ export class Game {
   }
 
   /**
-   * Moves the simulation forward by one step
+   * Avança a simulação em um passo
    */
   simulate() {
     if (window.ui.isPaused) return;
 
-    // Update the city data model first, then update the scene
+    // Atualiza o modelo de dados da cidade primeiro, depois atualiza a cena
     this.city.simulate(1);
 
     window.ui.updateTitleBar(this);
@@ -161,7 +161,7 @@ export class Game {
   }
 
   /**
-   * Uses the currently active tool
+   * Usa a ferramenta atualmente ativa
    */
   useTool() {
     switch (window.ui.activeToolId) {
@@ -185,7 +185,7 @@ export class Game {
   }
   
   /**
-   * Sets the currently selected object and highlights it
+   * Define o objeto atualmente selecionado e o destaca
    */
   updateSelectedObject() {
     this.selectedObject?.setSelected(false);
@@ -194,7 +194,7 @@ export class Game {
   }
 
   /**
-   * Sets the object that is currently highlighted
+   * Define o objeto que está atualmente em destaque
    */
   updateFocusedObject() {  
     this.focusedObject?.setFocused(false);
@@ -206,9 +206,8 @@ export class Game {
   }
 
   /**
-   * Gets the mesh currently under the the mouse cursor. If there is nothing under
-   * the the mouse cursor, returns null
-   * @param {MouseEvent} event Mouse event
+   * Obtém o mesh atualmente sob o cursor do mouse. Se não houver nada, retorna null.
+   * @param {MouseEvent} event Evento do mouse
    * @returns {THREE.Mesh | null}
    */
   #raycast() {
@@ -221,7 +220,7 @@ export class Game {
 
     let intersections = this.raycaster.intersectObjects(this.city.root.children, true);
     if (intersections.length > 0) {
-      // The SimObject attached to the mesh is stored in the user data
+      // O SimObject anexado ao mesh é armazenado nos dados do usuário
       const selectedObject = intersections[0].object.userData;
       return selectedObject;
     } else {
@@ -230,7 +229,7 @@ export class Game {
   }
 
   /**
-   * Resizes the renderer to fit the current game window
+   * Redimensiona o renderizador para caber na janela atual do jogo
    */
   onResize() {
     this.cameraManager.resize(window.ui.gameWindow);
@@ -238,7 +237,7 @@ export class Game {
   }
 }
 
-// Create a new game when the window is loaded
+// Cria um novo jogo quando a janela é carregada
 window.onload = () => {
   window.game = new Game();
 }

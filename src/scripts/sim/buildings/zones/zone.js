@@ -21,7 +21,6 @@ export class Zone extends Building {
     super(x, y);
     
     this.name = 'Zone';
-    this.power.required = 10;
     
     // Randomize the building rotation
     this.rotation.y = 90 * Math.floor(4 * Math.random()) * DEG2RAD;

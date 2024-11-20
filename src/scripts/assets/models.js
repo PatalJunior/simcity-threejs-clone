@@ -112,18 +112,6 @@ export default {
     "type": "zone",
     "filename": "industry-warehouse.glb"
   },
-  "power-plant": {
-    "type": "power",
-    "filename": "industry-factory-old.glb"
-  },
-  "power-line": {
-    "type": "power",
-    "filename": "power_line_pole_modified.glb"
-  },
-  "water-plant": {
-    "type": "power",
-    "filename": "industry-factory-old.glb"
-  },
   "road-straight": {
     "type": "road",
     "filename": "tile-road-straight.glb",

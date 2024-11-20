@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { SimObject } from '../simObject';
 import { BuildingStatus } from './buildingStatus';
-import { PowerModule } from './modules/power';
 import { RoadAccessModule } from './modules/roadAccess';
 
 export class Building extends SimObject {
@@ -15,10 +14,6 @@ export class Building extends SimObject {
    * @type {boolean}
    */
   hideTerrain = false;
-  /**
-   * @type {PowerModule}
-   */
-  power = new PowerModule(this);
   /**
    * @type {RoadAccessModule}
    */
@@ -50,10 +45,6 @@ export class Building extends SimObject {
   setStatus(status) {
     if (status !== this.status) {
       switch(status) {
-        case BuildingStatus.NoPower:
-          this.#statusIcon.visible = true;
-          this.#statusIcon.material.map = window.assetManager.statusIcons[BuildingStatus.NoPower];
-          break;
         case BuildingStatus.NoRoadAccess:
           this.#statusIcon.visible = true;
           this.#statusIcon.material.map = window.assetManager.statusIcons[BuildingStatus.NoRoadAccess];
@@ -67,12 +58,9 @@ export class Building extends SimObject {
   simulate(city) {
     super.simulate(city);
     
-    this.power.simulate(city);
     this.roadAccess.simulate(city);
 
-    if (!this.power.isFullyPowered) {
-      this.setStatus(BuildingStatus.NoPower);
-    } else if (!this.roadAccess.value) {
+    if (!this.roadAccess.value) {
       this.setStatus(BuildingStatus.NoRoadAccess);
     } else {
       this.setStatus(null);
@@ -80,7 +68,6 @@ export class Building extends SimObject {
   }
 
   dispose() {
-    this.power.dispose();
     this.roadAccess.dispose();
     super.dispose();
   }
@@ -102,12 +89,6 @@ export class Building extends SimObject {
       <span class="info-value">${this.roadAccess.value}</span>
       <br>`;
 
-    if (this.power.required > 0) {
-      html += `
-        <span class="info-label">Power (kW)</span>
-        <span class="info-value">${this.power.supplied}/${this.power.required}</span>
-        <br>`;
-    } 
     return html;
   }
 }

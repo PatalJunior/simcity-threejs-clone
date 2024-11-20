@@ -1,5 +1,4 @@
-import { CommercialZone } from './buildings/zones/commercial.js';
-import { IndustrialZone } from './buildings/zones/industrial.js';
+
 import { ResidentialZone } from './buildings/zones/residential.js';
 import config from '../config.js';
 
@@ -43,12 +42,6 @@ export class Citizen {
      */
     this.residence = residence;
 
-    /**
-     * Reference to the building the citizen works at
-     * @type {CommercialZone | IndustrialZone}
-     */
-    this.workplace = null;
-
     this.#initializeState();
   }
 
@@ -80,22 +73,12 @@ export class Citizen {
 
         break;
       case 'unemployed':
-        // Action - Look for a job
-        this.workplace = this.#findJob(city);
 
-        // Transitions
-        if (this.workplace) {
-          this.state = 'employed';
-        }
+        // TODO
 
         break;
       case 'employed':
         // Actions - None
-
-        // Transitions
-        if (!this.workplace) {
-          this.state = 'unemployed';
-        }
 
         break;
       default:
@@ -107,48 +90,10 @@ export class Citizen {
    * Handles any clean up needed before a building is removed
    */
   dispose() {
-    // Remove resident from its  workplace
-    const workerIndex = this.workplace?.jobs.workers.indexOf(this);
 
-    if (workerIndex !== undefined && workerIndex > -1) {
-      this.workplace.jobs.workers.splice(workerIndex);
-    }
   }
 
-  /**
-   * Search for a job nearby
-   * @param {object} city 
-   * @returns 
-   */
-  #findJob(city) {
-    const tile = city.findTile(this.residence, (tile) => {
-      // Search for an industrial or commercial building with at least one available job
-      if (tile.building?.type === 'industrial' || 
-          tile.building?.type === 'commercial') {
-        if (tile.building.jobs.availableJobs > 0) {
-          return true;
-        }
-      }
 
-      return false;
-    }, config.citizen.maxJobSearchDistance);
-
-    if (tile) {
-      // Employ the citizen at the building
-      tile.building.jobs.workers.push(this);
-      return tile.building;
-    } else {
-      return null;
-    }
-  }
-
-  /**
-   * Sets the workplace for the citizen
-   * @param {CommercialZone | IndustrialZone} workplace 
-   */
-  setWorkplace(workplace) {
-    this.workplace = workplace;
-  }
 
   /**
    * Returns an HTML representation of this object
